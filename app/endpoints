@@ -1,0 +1,10 @@
+1: http://localhost:5000/api/stats/deadliest_attacks?top_n=2
+2: http://localhost:5000/api/stats/casualties_by_region?top_n=2
+3: http://localhost:5000/api/stats/top_casualty_groups
+4: http://localhost:5000/api/stats/attack_target_correlation
+5: http://localhost:5000/api/stats/attack_trends?year=1970
+6: http://localhost:5000/api/stats/attack_change_by_region?top_n=5
+7: http://localhost:5000/api/stats//terror_heatmap
+8: http://localhost:5000/api/stats/active_groups_heatmap
+9: http://localhost:5000/api/stats/perpetrators_casualties_correlation
+10: http://localhost:5000/api/stats/events_casualties_correlation

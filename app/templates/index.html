@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Terrorism Analysis Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 16px;
+            color: #6c757d;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .visualization-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .question-description {
+            margin-bottom: 15px;
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .parameter-inputs {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Terrorism Analysis Dashboard</h1>
+        <div class="form-group">
+            <label for="question">Select Analysis:</label>
+            <select id="question" onchange="updateParameters()">
+                {% for id, config in questions.items() %}
+                <option value="{{ id }}">{{ config.title }}</option>
+                {% endfor %}
+            </select>
+            <div id="questionDescription" class="question-description"></div>
+        </div>
+        <div id="parameterInputs" class="parameter-inputs">
+        </div>
+        <button onclick="fetchVisualization()">Generate Visualization</button>
+        <div id="errorContainer" class="error" style="display: none;"></div>
+        <div id="loadingContainer" class="loading">
+            Loading visualization...
+        </div>
+        <div id="visualizationContainer" class="visualization-container" style="display: none;">
+        </div>
+    </div>
+    <script>
+        const BASE_URL = 'http://localhost:5000/stats';
+
+        const questionConfig = {
+            {% for id, config in questions.items() %}
+            "{{ id }}": {
+                type: "{{ config.type }}",
+                title: "{{ config.title }}",
+                description: "{{ config.description }}",
+                params: {{ config.params | tojson | safe }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorContainer').style.display = 'none';
+        }
+
+        function showLoading() {
+            document.getElementById('loadingContainer').classList.add('active');
+            document.getElementById('visualizationContainer').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingContainer').classList.remove('active');
+        }
+
+        async function fetchVisualization() {
+            const selectedQuestion = document.getElementById('question').value;
+            const config = questionConfig[selectedQuestion];
+            const visualizationContainer = document.getElementById('visualizationContainer');
+
+            hideError();
+            showLoading();
+
+            const params = new URLSearchParams();
+            config.params.forEach(param => {
+                const value = document.getElementById(param)?.value;
+                if (value) {
+                    params.append(param, value);
+                }
+            });
+
+            try {
+                const response = await fetch(`${BASE_URL}/${selectedQuestion}?${params}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.blob();
+                visualizationContainer.innerHTML = '';
+
+                if (config.type === 'map') {
+                    const iframe = document.createElement('iframe');
+                    iframe.width = '100%';
+                    iframe.height = '600';
+                    iframe.frameBorder = '0';
+                    iframe.src = URL.createObjectURL(data);
+                    visualizationContainer.appendChild(iframe);
+                } else {
+                    const img = document.createElement('img');
+                    img.style.maxWidth = '100%';
+                    img.src = URL.createObjectURL(data);
+                    visualizationContainer.appendChild(img);
+                }
+
+                visualizationContainer.style.display = 'block';
+            } catch (error) {
+                showError(error.message || 'Failed to fetch visualization');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateParameters() {
+            const question = document.getElementById('question').value;
+            const config = questionConfig[question];
+            const parameterInputs = document.getElementById('parameterInputs');
+            const descriptionDiv = document.getElementById('questionDescription');
+
+            descriptionDiv.textContent = config.description;
+            parameterInputs.innerHTML = '';
+
+            config.params.forEach(param => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.setAttribute('for', param);
+                label.textContent = param.replace('_', ' ').charAt(0).toUpperCase() + param.slice(1) + ':';
+
+                let input;
+
+                if (param === 'period') {
+                    input = document.createElement('select');
+                    ['year', 'month', '3_years', '5_years'].forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option;
+                        opt.textContent = option.replace('_', ' ');
+                        input.appendChild(opt);
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = ['top_n', 'year'].includes(param) ? 'number' : 'text';
+                }
+
+                input.name = param;
+                input.id = param;
+
+                div.appendChild(label);
+                div.appendChild(input);
+                parameterInputs.appendChild(div);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', updateParameters);
+    </script>
+</body>
+</html>
