@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Boolean, Float
 from sqlalchemy.orm import relationship
-from app.db.models import Base
+from app.db.psql.models import Base
 
 class Casualties(Base):
     __tablename__ = 'casualties'

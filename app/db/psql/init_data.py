@@ -1,12 +1,11 @@
-from typing import Dict, Tuple, Any
+from typing import Dict
 import pandas as pd
-import numpy as np
 from sqlalchemy.orm import Session
-from app.db.models import (
+from app.db.psql.models import (
     AttackType, TargetType, Casualties, Event, Location,
     City, Country, Region, TerroristGroup, Base
 )
-from app.db.database import engine, session_maker
+from app.db.psql.database import engine, session_maker
 from app.utils.csv_reader import read_and_process_files
 
 
@@ -225,23 +224,3 @@ def seed_database(df: pd.DataFrame):
         except Exception as e:
             session.rollback()
             print(f"Error in final commit: {str(e)}")
-
-def main():
-    print("Initializing database...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    print("Reading and processing files...")
-    df_gtd, df_rand = read_and_process_files()
-
-    print("Standardizing data...")
-    df_merged = standardize_data(df_gtd, df_rand)
-
-    print("Seeding database...")
-    seed_database(df_merged)
-
-    print("Database initialization complete!")
-
-if __name__ == "__main__":
-    # main()
-    pass

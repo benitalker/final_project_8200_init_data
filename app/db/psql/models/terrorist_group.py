@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from app.db.models import Base
+from app.db.psql.models import Base
 
 class TerroristGroup(Base):
     __tablename__ = 'terrorist_group'
