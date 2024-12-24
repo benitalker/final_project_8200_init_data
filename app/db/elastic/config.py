@@ -4,7 +4,6 @@ import os
 
 load_dotenv(verbose=True)
 
-
 class Settings(BaseSettings):
     NEWS_API_KEY: str = os.getenv('NEWS_API_KEY', '')
     GROQ_API_KEY: str = os.getenv('GROQ_API_KEY', '')
@@ -18,14 +17,10 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = '.env'
-        # Allow extra fields in the settings
         extra = 'ignore'
-
 
 settings = Settings()
 
-
-# For backward compatibility with existing code
 class Config:
     NEWS_API_KEY = settings.NEWS_API_KEY
     GROQ_API_KEY = settings.GROQ_API_KEY

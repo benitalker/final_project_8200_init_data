@@ -1,10 +1,8 @@
-import warnings
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, Optional, Union, Tuple
 from pathlib import Path
 
-# Define data types for GTD columns
 GTD_DTYPE_MAPPING = {
     'iyear': 'Int64',
     'imonth': 'Int64',
@@ -28,30 +26,23 @@ GTD_DTYPE_MAPPING = {
     'gname': 'str'
 }
 
-
 def read_csv_data(
         csv_path: Union[str, Path],
         encoding: str = 'iso-8859-1',
         dtype_mapping: Optional[Dict[str, Any]] = None
 ) -> pd.DataFrame:
-    """Read CSV file with error handling and proper data types"""
     try:
         kwargs = {
             'encoding': encoding,
-            'low_memory': False  # Prevent dtype warnings
+            'low_memory': False
         }
         if dtype_mapping:
             kwargs['dtype'] = dtype_mapping
-
-        # Handle missing columns gracefully
         if dtype_mapping:
-            # First read just the header
             header_df = pd.read_csv(csv_path, nrows=0, encoding=encoding)
-            # Filter dtype mapping to only include columns that exist
             existing_columns = {col: dtype for col, dtype in dtype_mapping.items()
                                 if col in header_df.columns}
             kwargs['dtype'] = existing_columns
-
         df = pd.read_csv(csv_path, **kwargs)
         return df.replace({np.nan: None})
     except FileNotFoundError:
@@ -61,9 +52,7 @@ def read_csv_data(
         print(f"Error reading CSV: {e}")
         return pd.DataFrame()
 
-
 def parse_date_safely(date_str: str) -> tuple:
-    """Parse date string into components"""
     try:
         for fmt in ['%d-%b-%y', '%d-%b-%Y', '%Y-%m-%d', '%m/%d/%Y']:
             try:
@@ -76,14 +65,9 @@ def parse_date_safely(date_str: str) -> tuple:
     except:
         return None, None, None
 
-
 def transform_worldwide_terrorism_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform RAND data to match GTD format"""
     try:
-        # Process dates
         date_components = df['Date'].apply(parse_date_safely)
-
-        # Map regions based on countries
         region_mapping = {
             'Israel': 'Middle East & North Africa',
             'Iraq': 'Middle East & North Africa',
@@ -103,8 +87,6 @@ def transform_worldwide_terrorism_data(df: pd.DataFrame) -> pd.DataFrame:
             'Brazil': 'South America',
             'Mexico': 'Central America & Caribbean'
         }
-
-        # Create transformed DataFrame with explicit dtypes
         transformed_df = pd.DataFrame({
             'iyear': date_components.apply(lambda x: x[0]).astype('Int64'),
             'imonth': date_components.apply(lambda x: x[1]).astype('Int64'),
@@ -127,9 +109,7 @@ def transform_worldwide_terrorism_data(df: pd.DataFrame) -> pd.DataFrame:
         print(f"Error transforming RAND data: {e}")
         return pd.DataFrame()
 
-
 def read_and_process_files() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Read and process both GTD and RAND data files"""
     try:
         base_path = Path(__file__).resolve().parent.parent / "data"
         print("Reading GTD data...")
@@ -138,17 +118,14 @@ def read_and_process_files() -> Tuple[pd.DataFrame, pd.DataFrame]:
             dtype_mapping=GTD_DTYPE_MAPPING
         )
         print(f"Read {len(gtd_data)} GTD records")
-
         print("Reading RAND data...")
         rand_data = read_csv_data(
             base_path / "RAND_Database_of_Worldwide_Terrorism_Incidents.csv"
         )
         print(f"Read {len(rand_data)} RAND records")
-
         print("Transforming RAND data...")
         rand_transformed = transform_worldwide_terrorism_data(rand_data)
         print("Data processing complete")
-
         return gtd_data, rand_transformed
     except Exception as e:
         print(f"Error in read_and_process_files: {e}")

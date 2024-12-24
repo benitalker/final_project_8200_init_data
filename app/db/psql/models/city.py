@@ -9,6 +9,5 @@ class City(Base):
     province = Column(String, nullable=True)
     country_id = Column(Integer, ForeignKey('countries.id'), nullable=True)
 
-    # Relationships with explicit foreign_keys
     country = relationship("Country", back_populates="cities")
     location = relationship("Location", back_populates="city", uselist=False)

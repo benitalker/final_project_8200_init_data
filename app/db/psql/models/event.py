@@ -18,7 +18,6 @@ class Event(Base):
     location_id = Column(Integer, ForeignKey('locations.id'), nullable=True)
     group_id = Column(Integer, ForeignKey('terrorist_group.id'),nullable=True)
 
-    # Relationships
     attack_type = relationship("AttackType", back_populates="events")
     target_type = relationship("TargetType", back_populates="events")
     casualties = relationship("Casualties", back_populates="event")

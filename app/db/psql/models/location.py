@@ -12,7 +12,6 @@ class Location(Base):
     city_id = Column(Integer, ForeignKey('cities.id'), nullable=True)
     region_id = Column(Integer, ForeignKey('regions.id'), nullable=True)
 
-    # Relationships with explicit foreign_keys
     event = relationship("Event", back_populates="location", uselist=False)
     country = relationship("Country", back_populates="location", uselist=False)
     city = relationship("City", back_populates="location", uselist=False)

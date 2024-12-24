@@ -7,6 +7,5 @@ class Region(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
 
-    # Relationships
     countries = relationship("Country", back_populates="region")
     location = relationship("Location", back_populates="region",uselist=False)

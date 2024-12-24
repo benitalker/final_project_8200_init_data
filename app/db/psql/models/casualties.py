@@ -11,5 +11,4 @@ class Casualties(Base):
     property_damage = Column(Boolean, nullable=True)
     property_value = Column(Float, nullable=True)
 
-    # Relationships
     event = relationship("Event", back_populates="casualties", uselist=False)
